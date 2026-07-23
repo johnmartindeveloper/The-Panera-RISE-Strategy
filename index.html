@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panera 2026: Interactive Menu & Nutrition Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --panera-cream: #FDFBFA;
+            --panera-green: #4A5D4E;
+            --panera-sage: #8DA18F;
+            --panera-earth: #7D6B5D;
+            --panera-accent: #D4A373;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--panera-cream);
+            color: #333;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(212, 163, 115, 0.2);
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--panera-accent);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .active-tab {
+            border-bottom: 2px solid var(--panera-accent);
+            color: var(--panera-green);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--panera-sage);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+<!-- Chosen Palette: Warm Hearth & Sage (Neutrals with soft greens and earth tones) -->
+<!-- Application Structure Plan: 
+    1. Navigation: Sticky sidebar-style menu for desktop, top bar for mobile.
+    2. Hero Section: High-level overview of the 'Panera RISE' strategy.
+    3. Innovation Hub: Interactive exploration of Market Bowls and Frittatas.
+    4. Nutrition Lab: A dynamic filtering system for macros and calories across classic items.
+    5. Value Center: Interactive comparison of the $4.99 Mix & Match vs. You Pick Two.
+    6. Subscriber Portal: Visualization of the 2026 Sip Club changes.
+    7. FAQ/Resource Center: Searchable knowledge base.
+    Reasoning: Users visit for specific data (macros, prices). Separating innovations from classics allows for targeted exploration while the 'Value Center' addresses the economic shift mentioned in the report.
+-->
+<!-- Visualization & Content Choices: 
+    - Market Bowl Comparison -> Goal: Compare Protein vs Price -> Bar/Radar Chart (Chart.js) -> Enables quick ROI analysis for protein-focused diners.
+    - Breakfast Frittata Stats -> Goal: Inform -> Dynamic Cards -> Shows calorie density and protein quickly.
+    - Nutrition Explorer -> Goal: Organize/Filter -> Interactive JS Table -> Allows users to find items under specific thresholds (e.g., <350 cal).
+    - Mix & Match Logic -> Goal: Compare/Organize -> Side-by-Side Comparison UI -> Visualizes the 'barbell' pricing strategy.
+    - Sip Club Tiers -> Goal: Change -> Progress Bars -> Communicates the shift from 'unlimited' to 'capped'.
+    - NO SVG/Mermaid: All icons are Unicode or CSS-based. All charts are Canvas via Chart.js.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<nav class="fixed top-0 w-full z-50 glass-card border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-[#4A5D4E]">Panera<span class="text-[#D4A373]">2026</span></span>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <button onclick="scrollToSection('hero')" class="nav-link font-semibold text-sm uppercase tracking-wider">Strategy</button>
+                <button onclick="scrollToSection('innovation')" class="nav-link font-semibold text-sm uppercase tracking-wider">New Menu</button>
+                <button onclick="scrollToSection('nutrition')" class="nav-link font-semibold text-sm uppercase tracking-wider">Nutrition</button>
+                <button onclick="scrollToSection('value')" class="nav-link font-semibold text-sm uppercase tracking-wider">Value</button>
+                <button onclick="scrollToSection('faq')" class="nav-link font-semibold text-sm uppercase tracking-wider">FAQs</button>
+            </div>
+            <a href="https://panerabread-menus.com/" target="_blank" rel="noopener" class="bg-[#4A5D4E] text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-[#D4A373] transition-colors">VISIT PORTAL</a>
+        </div>
+    </div>
+</nav>
+
+<main class="mt-16">
+    <!-- HERO SECTION -->
+    <section id="hero" class="relative py-20 px-6 bg-white overflow-hidden">
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <span class="inline-block px-3 py-1 bg-[#F5EBE0] text-[#7D6B5D] rounded-full text-xs font-bold mb-4">INDEPENDENT GUIDE</span>
+            <h1 class="text-5xl md:text-7xl font-bold text-[#4A5D4E] mb-6">The Panera <span class="italic text-[#D4A373]">RISE</span> Strategy</h1>
+            <p class="text-lg text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
+                In 2026, Panera Bread fundamentally reshaped the fast-casual landscape. This interactive guide deconstructs the brand's shift toward high-protein Market Bowls, portable breakfast frittatas, and a precision-tuned "barbell" pricing model. 
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div class="p-6 rounded-2xl bg-[#FDFBFA] border border-[#F5EBE0]">
+                    <div class="text-3xl mb-2">🥗</div>
+                    <h3 class="font-bold text-xl mb-1">2,246+</h3>
+                    <p class="text-sm text-gray-500 italic">Active Bakery-Cafes</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-[#FDFBFA] border border-[#F5EBE0]">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h3 class="font-bold text-xl mb-1">$4.99</h3>
+                    <p class="text-sm text-gray-500 italic">Mix & Match Starting Tier</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-[#FDFBFA] border border-[#F5EBE0]">
+                    <div class="text-3xl mb-2">💪</div>
+                    <h3 class="font-bold text-xl mb-1">44g</h3>
+                    <p class="text-sm text-gray-500 italic">Max Protein per Bowl</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INNOVATION HUB -->
+    <section id="innovation" class="py-20 px-6 bg-[#FDFBFA]">
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-12 text-center md:text-left">
+                <h2 class="text-4xl font-bold text-[#4A5D4E] mb-4">The Innovation Hub</h2>
+                <p class="text-gray-600 max-w-2xl">Explore the core of the 2026 menu overhaul. From protein-dense grain bowls to handheld breakfast solutions, we analyze the macronutrients and pricing of the newest chef-curated additions.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="glass-card p-8 rounded-3xl shadow-sm">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <span>📊</span> Market Bowl Analysis
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="marketBowlChart"></canvas>
+                    </div>
+                    <div class="mt-6 text-sm text-gray-500 italic text-center">
+                        Comparison of Protein Content (g) vs. Estimated Price ($)
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="p-6 rounded-2xl bg-white shadow-sm border-l-4 border-[#D4A373]">
+                        <h4 class="font-bold text-lg mb-2 text-[#4A5D4E]">Market Bowls</h4>
+                        <p class="text-sm text-gray-600 mb-4">Premium entrees served over herbed brown rice and arugula. Designed for the "satiety-focused" diner.</p>
+                        <div id="bowl-details" class="space-y-4">
+                            <!-- Dynamic content injection via JS -->
+                        </div>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-white shadow-sm border-l-4 border-[#8DA18F]">
+                        <h4 class="font-bold text-lg mb-2 text-[#4A5D4E]">Breakfast Frittatas</h4>
+                        <p class="text-sm text-gray-600 mb-4">Baked-in-house eggs utilizing classic flavor profiles like Broccoli Cheddar.</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-[#F9F7F5] p-4 rounded-xl">
+                                <span class="block text-xs uppercase text-[#D4A373] font-bold">Protein King</span>
+                                <span class="block font-bold">5-Cheese & Bacon</span>
+                                <span class="text-sm text-gray-500">17g Protein | $7.39</span>
+                            </div>
+                            <div class="bg-[#F9F7F5] p-4 rounded-xl">
+                                <span class="block text-xs uppercase text-[#D4A373] font-bold">The Classic</span>
+                                <span class="block font-bold">Broccoli Cheddar</span>
+                                <span class="text-sm text-gray-500">15g Protein | $7.39</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NUTRITION LAB -->
+    <section id="nutrition" class="py-20 px-6 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-[#4A5D4E] mb-4">Interactive Nutrition Lab</h2>
+                <p class="text-gray-600 max-w-3xl mx-auto">Navigating the 2026 menu requires precise data. Filter our database to find meals that align with your caloric and macronutrient goals. Use the toggles to narrow your search.</p>
+            </div>
+
+            <div class="mb-8 flex flex-wrap gap-4 justify-center">
+                <button onclick="filterNutrition('all')" class="nutrition-filter active-tab px-6 py-2 font-bold text-sm">ALL ITEMS</button>
+                <button onclick="filterNutrition('low-cal')" class="nutrition-filter px-6 py-2 font-bold text-sm">UNDER 350 CAL</button>
+                <button onclick="filterNutrition('high-protein')" class="nutrition-filter px-6 py-2 font-bold text-sm">HIGH PROTEIN</button>
+                <button onclick="filterNutrition('soup')" class="nutrition-filter px-6 py-2 font-bold text-sm">SOUPS</button>
+            </div>
+
+            <div class="overflow-x-auto glass-card rounded-3xl p-2">
+                <table class="w-full text-left">
+                    <thead class="bg-[#4A5D4E] text-white rounded-t-2xl">
+                        <tr>
+                            <th class="p-4 rounded-tl-2xl">Menu Item</th>
+                            <th class="p-4">Calories</th>
+                            <th class="p-4">Fat (g)</th>
+                            <th class="p-4">Carbs (g)</th>
+                            <th class="p-4">Protein (g)</th>
+                            <th class="p-4 rounded-tr-2xl">Category</th>
+                        </tr>
+                    </thead>
+                    <tbody id="nutrition-table-body" class="text-sm">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-xs text-center text-gray-400">*Values based on standard servings. Customized orders may alter these baseline profiles.</p>
+        </div>
+    </section>
+
+    <!-- VALUE & SIP CLUB -->
+    <section id="value" class="py-20 px-6 bg-[#FDFBFA]">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                <div>
+                    <h2 class="text-4xl font-bold text-[#4A5D4E] mb-6">Economy of Value</h2>
+                    <p class="text-gray-600 mb-8 leading-relaxed">The 2026 "Barbell" pricing strategy balances premium items with aggressive value. The $4.99 Mix & Match menu represents a significant pivot from the traditional You Pick Two structure, offering fixed pricing for smaller portions.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 bg-white p-6 rounded-2xl border border-[#F5EBE0]">
+                            <div class="bg-[#D4A373] text-white w-12 h-12 flex items-center justify-center rounded-full font-bold">1</div>
+                            <div>
+                                <h4 class="font-bold">Mix & Match ($4.99)</h4>
+                                <p class="text-sm text-gray-500">Choice of 10 items (half-portions) + side.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 bg-white p-6 rounded-2xl border border-[#F5EBE0]">
+                            <div class="bg-[#8DA18F] text-white w-12 h-12 flex items-center justify-center rounded-full font-bold">2</div>
+                            <div>
+                                <h4 class="font-bold">You Pick Two (Variable)</h4>
+                                <p class="text-sm text-gray-500">Standard duo with custom pricing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-8 rounded-3xl">
+                    <h3 class="text-2xl font-bold text-[#4A5D4E] mb-6">Sip Club Tiers (Post-July 2026)</h3>
+                    <p class="text-sm text-gray-600 mb-6">The transition from "Unlimited" to "Capped" rewards. Users now manage consumption within defined windows.</p>
+                    <div class="space-y-8">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-bold text-sm">Legacy Model (Daily)</span>
+                                <span class="text-xs font-bold text-[#D4A373]">UNLIMITED</span>
+                            </div>
+                            <div class="w-full bg-gray-200 h-3 rounded-full">
+                                <div class="bg-[#D4A373] h-full rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-bold text-sm">2026 Tiered Model (Per Visit)</span>
+                                <span class="text-xs font-bold text-[#4A5D4E]">2 CUPS CAP</span>
+                            </div>
+                            <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden flex">
+                                <div class="bg-[#4A5D4E] h-full" style="width: 40%"></div>
+                                <div class="bg-red-100 h-full" style="width: 60%"></div>
+                            </div>
+                            <p class="text-[10px] mt-2 text-gray-400 uppercase tracking-widest font-bold">Restructured allowance: 2 Drinks per session max.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ SECTION -->
+    <section id="faq" class="py-20 px-6 bg-white">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-4xl font-bold text-[#4A5D4E] text-center mb-12">Essential FAQ</h2>
+            <div id="faq-container" class="space-y-4">
+                <!-- FAQs injected here -->
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-[#4A5D4E] text-[#FDFBFA] py-16 px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div>
+            <span class="text-3xl font-bold">Panera<span class="text-[#D4A373]">2026</span></span>
+            <p class="mt-4 text-gray-300 text-sm leading-relaxed max-w-md">
+                This document and the associated web property operate strictly as an independent informational resource. The platform is not affiliated with, endorsed by, sponsored by, or officially connected to Panera Bread, Panera Brands, or any of its subsidiaries.
+            </p>
+        </div>
+        <div class="text-center md:text-right">
+            <h4 class="font-bold text-xl mb-4">Empower Your Dining</h4>
+            <p class="text-gray-300 mb-6 text-sm italic">"Simplifying complex nutritional tables and clarifying promotional pricing."</p>
+            <a href="https://panerabread-menus.com/" class="inline-block bg-[#D4A373] text-white px-8 py-4 rounded-full font-bold hover:scale-105 transition-transform">EXPLORE FULL DATA PORTAL</a>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/10 text-center text-xs text-gray-400">
+        &copy; 2026 PaneraBread-Menus Independent Informational Guide. All trademarks belong to their respective owners.
+    </div>
+</footer>
+
+<script>
+    // DATA CORE
+    const marketBowls = [
+        { name: 'All-In Veggie', protein: 12, price: 9.99, description: 'Glazed sweet potatoes, feta, cucumber, corn.' },
+        { name: 'Sesame Ginger Chicken', protein: 38, price: 13.99, description: 'Seasoned chicken, edamame, red cabbage, Candied almonds.' },
+        { name: 'Carnitas Elote', protein: 44, price: 15.99, description: 'Slow-roasted pork, avocado, feta, greek yogurt dressing.' }
+    ];
+
+    const nutritionData = [
+        { name: 'French Baguette', cal: 150, fat: 0, carbs: 30, protein: 5, cat: 'Bakery' },
+        { name: 'Cinnamon Crunch Bagel', cal: 430, fat: 7, carbs: 82, protein: 9, cat: 'Bakery' },
+        { name: 'Broccoli Cheddar Soup (Cup)', cal: 240, fat: 15, carbs: 17, protein: 9, cat: 'Soup' },
+        { name: 'Ten Vegetable Soup (Bowl)', cal: 100, fat: 2, carbs: 16, protein: 5, cat: 'Soup' },
+        { name: 'Five Cheese Frittata', cal: 300, fat: 22, carbs: 8, protein: 17, cat: 'Breakfast' },
+        { name: 'Asian Sesame Salad (Half)', cal: 200, fat: 11, carbs: 12, protein: 15, cat: 'Salad' },
+        { name: 'Deli Turkey Sandwich (Half)', cal: 270, fat: 12, carbs: 25, protein: 18, cat: 'Sandwich' }
+    ];
+
+    const faqs = [
+        { q: "What is the $4.99 Mix & Match?", a: "Launched in early 2026, it's a dedicated value tier allowing patrons to select up to ten half-portion items—including the Toasted Italiano—for exactly $4.99 each." },
+        { q: "How did Sip Club change?", a: "In July 2026, it moved from unlimited daily drinks to a capped tier (e.g., 2 drinks per visit) before standard pricing applies." },
+        { q: "What's the highest protein option?", a: "The Carnitas Elote Market Bowl leads the menu with 44 grams of protein." },
+        { q: "Are there low-calorie soups?", a: "Yes, the Ten Vegetable Soup remains the leader at only 100 calories per bowl." },
+        { q: "How do I claim MyPanera missed rewards?", a: "Input the code from your receipt via the online portal within 30 days. Limits apply: 1 per day, 4 per month." }
+    ];
+
+    // INITIALIZATION
+    function init() {
+        renderMarketBowlChart();
+        renderBowlDetails();
+        renderNutritionTable(nutritionData);
+        renderFAQs();
+    }
+
+    // SCROLLING
+    function scrollToSection(id) {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // CHARTS
+    function renderMarketBowlChart() {
+        const ctx = document.getElementById('marketBowlChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: marketBowls.map(b => b.name),
+                datasets: [
+                    {
+                        label: 'Protein (grams)',
+                        data: marketBowls.map(b => b.protein),
+                        backgroundColor: '#4A5D4E',
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'Price (USD)',
+                        data: marketBowls.map(b => b.price),
+                        backgroundColor: '#D4A373',
+                        borderRadius: 8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // BOWL CARDS
+    function renderBowlDetails() {
+        const container = document.getElementById('bowl-details');
+        container.innerHTML = marketBowls.map(bowl => `
+            <div class="flex justify-between items-start border-b border-gray-100 pb-2">
+                <div>
+                    <span class="font-bold text-[#4A5D4E]">${bowl.name}</span>
+                    <p class="text-[10px] text-gray-400 uppercase font-semibold">${bowl.description}</p>
+                </div>
+                <div class="text-right">
+                    <span class="block font-bold text-[#D4A373]">$${bowl.price}</span>
+                    <span class="text-xs text-gray-500">${bowl.protein}g Protein</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // NUTRITION TABLE
+    function renderNutritionTable(data) {
+        const body = document.getElementById('nutrition-table-body');
+        body.innerHTML = data.map(item => `
+            <tr class="border-b hover:bg-[#FDFBFA] transition-colors">
+                <td class="p-4 font-semibold">${item.name}</td>
+                <td class="p-4">${item.cal}</td>
+                <td class="p-4">${item.fat}</td>
+                <td class="p-4">${item.carbs}</td>
+                <td class="p-4 font-bold text-[#4A5D4E]">${item.protein}</td>
+                <td class="p-4"><span class="px-2 py-1 bg-gray-100 rounded text-[10px] font-bold uppercase text-gray-500">${item.cat}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    function filterNutrition(type) {
+        let filtered = nutritionData;
+        
+        // Update active tab UI
+        document.querySelectorAll('.nutrition-filter').forEach(btn => btn.classList.remove('active-tab'));
+        event.target.classList.add('active-tab');
+
+        if (type === 'low-cal') {
+            filtered = nutritionData.filter(i => i.cal <= 350);
+        } else if (type === 'high-protein') {
+            filtered = nutritionData.filter(i => i.protein >= 15);
+        } else if (type === 'soup') {
+            filtered = nutritionData.filter(i => i.cat === 'Soup');
+        }
+        renderNutritionTable(filtered);
+    }
+
+    // FAQs
+    function renderFAQs() {
+        const container = document.getElementById('faq-container');
+        container.innerHTML = faqs.map((f, i) => `
+            <div class="border rounded-2xl overflow-hidden">
+                <button onclick="toggleFAQ(${i})" class="w-full text-left p-6 font-bold text-[#4A5D4E] flex justify-between items-center hover:bg-[#FDFBFA] transition-colors">
+                    ${f.q}
+                    <span id="faq-icon-${i}" class="transform transition-transform">▼</span>
+                </button>
+                <div id="faq-ans-${i}" class="hidden p-6 pt-0 text-gray-600 border-t border-gray-50 bg-[#FDFBFA]">
+                    ${f.a}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function toggleFAQ(index) {
+        const ans = document.getElementById(`faq-ans-${index}`);
+        const icon = document.getElementById(`faq-icon-${index}`);
+        ans.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+
+    // RUN
+    window.onload = init;
+</script>
+
+</body>
+</html>
